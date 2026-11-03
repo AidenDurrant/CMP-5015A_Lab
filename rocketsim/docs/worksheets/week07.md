@@ -185,13 +185,13 @@ $$
 
 ## Before you start
 
-1. Unzip the `rocketsim` folder and configure it **straight away** — the first `cmake -B build` downloads SFML and takes a few minutes.
+1. Unzip the `rocketsim` folder and configure it **straight away**: the first `cmake -B build` downloads SFML and takes a few minutes.
    ```sh
    cd rocketsim
    cmake -B build
    cmake --build build
    ```
-2. Run `./build/rocketsim --demo`. A window replays a parabola in real time. Press **+** to speed it up, **Space** to restart, **Esc** to close. Note the **1 km grid** — it is the same on every run, so compare flights against the grid, not the window edges.
+2. Run `./build/rocketsim --demo`. A window replays a parabola in real time. Press **+** to speed it up, **Space** to restart, **Esc** to close. Note the **1 km grid**, it is the same on every run, so compare flights against the grid, not the window edges.
 3. Run `./build/rocketsim` on its own and confirm it prints **`The rocket never left the pad`**.
 4. Read `vec2.h` and `physics.h` **in full**. They are short, and you will use every function in them.
 
@@ -247,7 +247,7 @@ In `physics.cpp`, implement `totalMass`, `engineRunning`, `gravityForce` and `th
 - Use the `Vec2` helpers in `vec2.h` (`add`, `scale`, …).
 - **Do not write `->` anywhere.**
 
-Build and run. With no drag and no `step` yet nothing will move — that comes next. Make sure it compiles cleanly with no warnings.
+Build and run. With no drag and no `step` yet nothing will move, that comes in thee next task. Make sure it compiles cleanly with no warnings.
 
 **Done when:** the four functions compile, and each one does exactly what its comment in `physics.h` says.
 
@@ -260,7 +260,7 @@ Implement `dragForce` using `airDensity` and the drag formula above. It must poi
 Then implement `step` using Euler's method, in the order given in its comment.
 
 > [!TIP]
-> Try implementing `step` *before* `dragForce` (leave drag returning zero). Gravity will eventually win and the rocket will come down — check the summary to see how high it got. Then add drag and watch the apogee drop.
+> Try implementing `step` *before* `dragForce` (leave drag returning zero). Gravity will eventually win and the rocket will come down. Check the summary to see how high it got, then add drag and watch the apogee drop.
 
 **Done when:** the rocket flies an arc and lands. The summary's flight time and range are no longer zero.
 
@@ -395,7 +395,7 @@ Implement `loadLaunchFile` in `config.cpp` using `std::ifstream`, `std::getline`
 **Done when:** `rocketsim --launch launch.txt` reproduces the default flight **exactly**, and changing `launch_angle` in the file changes the plot without rebuilding.
 
 > [!WARNING]
-> Try setting a value to `fifty`. `std::stod` **throws**, and the program dies. Leave it like that — Week 11 fixes it properly with exceptions.
+> Try setting a value to `fifty`. `std::stod` **throws**, and the program dies. Leave it like that, Week 11 fixes it properly with exceptions.
 
 ---
 
@@ -453,7 +453,7 @@ Before moving on, run your program and check each of the following yourself:
 
 - **`step` must advance `rocket.time`.** If it does not, the loop stops after its step-count guard and prints the "never left the pad" hint.
 - **Burn the fuel after computing the forces**, not before, or the first step runs with the wrong mass.
-- **`std::fixed` is sticky.** Once set on `cout` it stays set — which is why `printStats` sets it again.
+- **`std::fixed` is sticky.** Once set on `cout` it stays set, which is why `printStats` sets it again.
 - **Resist `printf`.** It still works in C++, but the point of this week is that `<<` is type-checked. Habits formed now matter in Week 11, when `<<` and `>>` are the whole point.
 
 ---
