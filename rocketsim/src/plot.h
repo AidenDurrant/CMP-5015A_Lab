@@ -1,6 +1,8 @@
 // plot.h -- draws flight paths in a live window (replayed in real time, like a
 //           ground-station display), as an SVG file, and as an ASCII preview.
 //
+// NOTE -- this file and the plotting was created with the use of AI tools. Declaring for transparency - Aiden
+//
 // This class is GIVEN and complete. You do not need to change it, but you are
 // welcome to read plot.cpp: it uses only std::vector, std::string and
 // std::ofstream, all of which you meet in weeks 7 and 9. plot_window.cpp is

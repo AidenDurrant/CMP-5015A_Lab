@@ -54,30 +54,102 @@ Look at `physics.h`: every function that only *reads* the rocket takes `const Ro
 
 ### The physics model
 
-You do not need any physics beyond this box. The rocket is a point mass; `x` is downrange and `y` is altitude, both in metres.
+You do not need any physics beyond this section. The rocket is treated as a single point with a mass. `x` is the distance downrange and `y` is the altitude, both in metres, with the launch pad at the origin and the ground at `y = 0`.
+
+#### Symbols
+
+**Bold** symbols are **vectors** with an x and a y component (a `Vec2` in the code). Plain symbols are single numbers (**scalars**, a `double` in the code).
+
+| Symbol | Meaning | Unit | Where it is in the code |
+| --- | --- | --- | --- |
+| $m$ | Current total mass of the rocket | kg | `totalMass(rocket)` |
+| $m_{dry}$ | Dry mass: structure and payload, never changes | kg | `rocket.dryMass` |
+| $m_{fuel}$ | Fuel still on board | kg | `rocket.fuelMass` |
+| $g$ | Acceleration due to gravity, $9.81$ | m/s² | `physics::GRAVITY` |
+| $T$ | Engine thrust (the size of the force) | N | `rocket.thrust` |
+| $\dot{m}$ | Burn rate: fuel used per second while the engine runs | kg/s | `rocket.burnRate` |
+| $\hat{\mathbf{d}}$ | Thrust direction, a **unit vector** (length 1) | — | `unitFromAngle(rocket.launchAngleDeg)` |
+| $\mathbf{p}$ | Position $(x, y)$ | m | `rocket.position` |
+| $y$ | Altitude, the y component of $\mathbf{p}$ | m | `rocket.position.y` |
+| $\mathbf{v}$ | Velocity | m/s | `rocket.velocity` |
+| $\lvert\mathbf{v}\rvert$ | Speed: the length of $\mathbf{v}$ | m/s | `length(rocket.velocity)` |
+| $\mathbf{a}$ | Acceleration | m/s² | a local variable in `step` |
+| $\rho(y)$ | Air density at altitude $y$ | kg/m³ | `airDensity(y)` |
+| $\rho_0$ | Air density at sea level, $1.225$ | kg/m³ | `physics::SEA_LEVEL_DENSITY` |
+| $H$ | Scale height of the atmosphere, $8500$ | m | `physics::SCALE_HEIGHT` |
+| $C_d$ | Drag coefficient (no unit) | — | `rocket.dragCoeff` |
+| $A$ | Frontal area of the rocket | m² | `rocket.area` |
+| $\mathbf{F}_g$, $\mathbf{F}_t$, $\mathbf{F}_d$ | Gravity, thrust and drag forces | N | `gravityForce`, `thrustForce`, `dragForce` |
+| $t$ | Mission time | s | `rocket.time` |
+| $\Delta t$ | Time step: how far time moves in one call to `step` | s | `dt` |
+| $e$ | Euler's number, $\approx 2.718$; $e^{x}$ is written `std::exp(x)` | — | `std::exp` |
+
+Every multiplication is written with $\times$. A **scalar $\times$ vector** multiplies each component by the scalar: for example, $3 \times (1, 2) = (3, 6)$. In the code that is `scale(v, k)`.
+
+#### Mass
+
+$$
+m = m_{dry} + m_{fuel}
+$$
+
+#### The three forces
+
+**Gravity** always points straight down (negative y):
+
+$$
+\mathbf{F}_g = \bigl(0,\; -\,m \times g\bigr)
+$$
+
+**Thrust** has size $T$ and points along $\hat{\mathbf{d}}$, but only while there is fuel left:
+
+$$
+\mathbf{F}_t =
+\begin{cases}
+T \times \hat{\mathbf{d}} & \text{if } m_{fuel} > 0 \\[4pt]
+(0,\; 0) & \text{otherwise}
+\end{cases}
+$$
+
+**Drag** always points **opposite** to the velocity, and grows with the square of the speed:
+
+$$
+\mathbf{F}_d = -\,\tfrac{1}{2} \times \rho(y) \times C_d \times A \times \lvert\mathbf{v}\rvert \times \mathbf{v}
+$$
+
+It can help to read this as a size times a direction. The size of the drag force is $\tfrac{1}{2} \times \rho(y) \times C_d \times A \times \lvert\mathbf{v}\rvert^2$. The direction is $-\,\mathbf{v} \div \lvert\mathbf{v}\rvert$, a unit vector pointing backwards along the flight path.
+
+**Air density** falls off exponentially with altitude:
+
+$$
+\rho(y) = \rho_0 \times e^{-\,y \,\div\, H}
+$$
+
+#### One time step (Euler's method)
+
+Each call to `step(rocket, dt)` moves the rocket forward by $\Delta t$ seconds. The calculations are done **in this order**, and each line uses the values produced by the lines above it. The subscript "new" marks the value stored back into the rocket.
 
 $$
 \begin{aligned}
-\mathbf{F}_g &= (0,\; -m g) \\
-\mathbf{F}_t &= T\,\hat{\mathbf{d}} \quad \text{while fuel remains, else } \mathbf{0} \\
-\mathbf{F}_d &= -\tfrac{1}{2}\,\rho(y)\,C_d\,A\,|\mathbf{v}|\,\mathbf{v} \\
-\rho(y) &= \rho_0\, e^{-y/H}, \quad \rho_0 = 1.225\ \text{kg/m}^3,\ H = 8500\ \text{m}
+&\text{1. Total force:} && \mathbf{F} = \mathbf{F}_g + \mathbf{F}_t + \mathbf{F}_d \\[4pt]
+&\text{2. Acceleration:} && \mathbf{a} = \mathbf{F} \div m \\[4pt]
+&\text{3. Velocity:} && \mathbf{v}_{new} = \mathbf{v} + \mathbf{a} \times \Delta t \\[4pt]
+&\text{4. Position:} && \mathbf{p}_{new} = \mathbf{p} + \mathbf{v}_{new} \times \Delta t \\[4pt]
+&\text{5. Fuel (only while the engine runs):} && m_{fuel,\,new} = \max\bigl(0,\; m_{fuel} - \dot{m} \times \Delta t\bigr) \\[4pt]
+&\text{6. Time:} && t_{new} = t + \Delta t
 \end{aligned}
 $$
 
-Each call to `step(rocket, dt)` advances time with **Euler's method**, in this order:
+Dividing a vector by a scalar, as in step 2, divides each component, which is the same as $\mathbf{F} \times (1 \div m)$. Step 4 uses the **new** velocity from step 3. The $\max(0,\;\ldots)$ in step 5 stops the fuel going negative on the last burning step.
 
-$$
-\begin{aligned}
-\mathbf{a} &= (\mathbf{F}_g + \mathbf{F}_t + \mathbf{F}_d) / m \\
-\mathbf{v} &\leftarrow \mathbf{v} + \mathbf{a}\,\Delta t \\
-\mathbf{p} &\leftarrow \mathbf{p} + \mathbf{v}\,\Delta t \\
-m_{fuel} &\leftarrow \max(0,\; m_{fuel} - \dot{m}\,\Delta t) \\
-t &\leftarrow t + \Delta t
-\end{aligned}
-$$
+#### The default rocket
 
-Mass *m* is dry mass plus remaining fuel. The default rocket weighs 200 kg at lift-off, has 5000 N of thrust and burns for 15 s.
+| Quantity | Value |
+| --- | --- |
+| Lift-off mass $m$ | $50 + 150 = 200$ kg |
+| Thrust $T$ | $5000$ N |
+| Burn time | $m_{fuel} \div \dot{m} = 150 \div 10 = 15$ s |
+| Launch angle | $85^\circ$ from horizontal |
+| Time step $\Delta t$ | $0.01$ s |
 
 ---
 
@@ -97,6 +169,41 @@ Mass *m* is dry mass plus remaining fuel. The default rocket weighs 200 kg at li
 
 > [!NOTE]
 > Can't build with the window? Use `cmake -B build -DROCKETSIM_LIVE=OFF` and open `flight.svg` in a web browser instead. Every task works this way.
+
+### Running with command-line arguments in CLion
+
+`rocketsim` is controlled by command-line arguments such as `--demo`, `--quiet`, `--launch launch.txt` and `--out test`. In a terminal you type them after the program name. In CLion you set them once in a **run configuration**, and the **Run** button passes them every time.
+
+1. Open the folder in CLion (**File → Open…** and choose the `rocketsim` folder). CLion detects `CMakeLists.txt` and configures the project; the first configure downloads SFML, so wait for the CMake tool window to finish.
+2. In the toolbar at the top right, make sure the run configuration drop-down shows **rocketsim**.
+3. Open the drop-down and choose **Edit Configurations…** (or use the menu **Run → Edit Configurations…**).
+4. Select **rocketsim** under **CMake Application** on the left.
+5. Fill in two fields:
+
+   | Field | What to enter | Why |
+   | --- | --- | --- |
+   | **Program arguments** | The arguments only, without the program name, e.g. `--demo` or `--launch launch.txt --out test` | CLion passes these to `main` as `argv[1]`, `argv[2]`, … |
+   | **Working directory** | `$ProjectFileDir$` (click the folder icon or type it) | Relative paths are resolved from here, so `launch.txt` is found in the project folder and `flight.svg` is written there too |
+
+6. Click **OK**, then press **Run** (the green triangle, or **Ctrl+R** on macOS / **Shift+F10** on Windows and Linux).
+
+![CLion run configuration with Program arguments and Working directory](../images/week07/clion-run-config.png)
+
+> [!TIP]
+> **Keep one configuration per command.** In the **Edit Configurations…** dialog, select **rocketsim** and click **Copy Configuration** (the copy icon), then give each copy a clear name with its own arguments, for example:
+>
+> | Configuration name | Program arguments |
+> | --- | --- |
+> | `rocketsim` | *(empty)* |
+> | `rocketsim demo` | `--demo` |
+> | `rocketsim launch file` | `--launch launch.txt --out test` |
+>
+> Switching between them is then a single click in the toolbar drop-down.
+
+> [!WARNING]
+> - A launch file that **cannot be opened**, or output files that seem to vanish, almost always mean the **working directory** is not set. CLion's default is the build folder (e.g. `cmake-build-debug`), so `launch.txt` is not found there and `flight.svg` is written there instead.
+> - Arguments are split on spaces. If a file name contains a space, put it in double quotes: `--launch "my rocket.txt"`.
+> - The **Run** tool window at the bottom of CLion is where the telemetry table and summary appear. The live window opens separately; close it (**Esc**) to let the program finish.
 
 ---
 
@@ -172,7 +279,12 @@ Use these to check your `step` and forces against known answers (default rocket,
 | **Week 7 Easy** | Defaults | Apogee ≈ **6,590 m** at **40.3 s**; max speed ≈ 432 m/s; range ≈ 1,720 m; flight time ≈ 85 s |
 
 > [!NOTE]
-> The first check has a closed-form answer. Exhaust velocity is *v*<sub>e</sub> = *T* / ṁ = 500 m/s, so the ideal Δv = *v*<sub>e</sub> ln(200 / 50) ≈ 693 m/s along the launch direction, minus *g* × 15 s lost vertically to gravity. If you are within a few m/s, your `step` is correct.
+> The first check has a closed-form answer, worked out in three steps:
+> - **Exhaust velocity:** $v_e = T \div \dot{m} = 5000 \div 10 = 500$ m/s.
+> - **Ideal speed gain** along the launch direction: $\Delta v = v_e \times \ln(200 \div 50) = 500 \times \ln 4 \approx 693$ m/s. Here $\ln$ is the natural logarithm (`std::log`).
+> - **Gravity loss:** subtract $g \times 15\ \text{s} = 9.81 \times 15 \approx 147$ m/s from the **vertical** component.
+>
+> If your speed at burnout is within a few m/s of the expected value, your `step` is correct.
 
 ---
 
@@ -248,6 +360,7 @@ Implement `loadLaunchFile` in `config.cpp` using `std::ifstream`, `std::getline`
 - Strip `#` comments, skip blank lines, and trim spaces around keys and values.
 - Report unknown keys on `std::cerr` **with the line number**.
 - See the [launch file format](../code-reference/build-and-project.md#launchtxt) for every key.
+- In CLion, set **Program arguments** to `--launch launch.txt` and **Working directory** to `$ProjectFileDir$` (see [Running with command-line arguments in CLion](#running-with-command-line-arguments-in-clion)).
 
 **Done when:** `rocketsim --launch launch.txt` reproduces the default flight **exactly**, and changing `launch_angle` in the file changes the plot without rebuilding.
 
@@ -287,6 +400,8 @@ void destroyLog(TelemetryLog& log);
 ### Task H3 · An `--out` option
 
 Add `--out NAME` so the SVG and CSV are written as `NAME.svg` and `NAME.csv`. Build the file names with `std::string` concatenation.
+
+Each argument arrives in `main` as one element of `argv`, so `--out test` is two elements: `argv[i]` is `"--out"` and `argv[i + 1]` is `"test"`. Look at how `main` already handles `--launch FILE` for the pattern. To test it in CLion, add `--out test` to **Program arguments**.
 
 **Done when:** `rocketsim --out test` writes `test.svg` and `test.csv`.
 

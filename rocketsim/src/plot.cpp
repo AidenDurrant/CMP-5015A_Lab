@@ -1,5 +1,8 @@
 // plot.cpp -- GIVEN. See plot.h for the interface. SVG output and ASCII preview;
 // the window is in plot_window.cpp.
+//
+// NOTE -- this file and the plotting was created with the use of AI tools. Declaring for transparency - Aiden
+//
 
 #include "plot.h"
 

@@ -4,6 +4,8 @@
 // labs depends on reading this file.
 //
 // Build without it with:  cmake -B build -DROCKETSIM_LIVE=OFF
+//
+// NOTE -- this file and the plotting was created with the use of AI tools. Declaring for transparency - Aiden
 
 #include "plot.h"
 
