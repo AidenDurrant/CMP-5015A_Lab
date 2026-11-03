@@ -72,7 +72,8 @@ You do not need any physics beyond this section. The rocket is treated as a sing
 | $\mathbf{p}$ | Position $(x, y)$ | m | `rocket.position` |
 | $y$ | Altitude, the y component of $\mathbf{p}$ | m | `rocket.position.y` |
 | $\mathbf{v}$ | Velocity | m/s | `rocket.velocity` |
-| $\lvert\mathbf{v}\rvert$ | Speed: the length of $\mathbf{v}$ | m/s | `length(rocket.velocity)` |
+| $\lvert\mathbf{v}\rvert$ | Speed: the **length** (magnitude) of $\mathbf{v}$, $\sqrt{v_x^2 + v_y^2}$ | m/s | `length(rocket.velocity)` |
+| $\hat{\mathbf{v}}$ | The **normalised** velocity: $\mathbf{v} \div \lvert\mathbf{v}\rvert$, a unit vector (length 1) pointing the way the rocket is moving | — | `normalised(rocket.velocity)` |
 | $\mathbf{a}$ | Acceleration | m/s² | a local variable in `step` |
 | $\rho(y)$ | Air density at altitude $y$ | kg/m³ | `airDensity(y)` |
 | $\rho_0$ | Air density at sea level, $1.225$ | kg/m³ | `physics::SEA_LEVEL_DENSITY` |
@@ -97,26 +98,28 @@ $$
 **Gravity** always points straight down (negative y):
 
 $$
-\mathbf{F}_g = \bigl(0,\; -\,m \times g\bigr)
+\mathbf{F}_g = (0,\ -m \times g)
 $$
 
-**Thrust** has size $T$ and points along $\hat{\mathbf{d}}$, but only while there is fuel left:
+**Thrust** has size $T$ and points along $\hat{\mathbf{d}}$ while there is fuel left ($m_{fuel} > 0$):
 
 $$
-\mathbf{F}_t =
-\begin{cases}
-T \times \hat{\mathbf{d}} & \text{if } m_{fuel} > 0 \\[4pt]
-(0,\; 0) & \text{otherwise}
-\end{cases}
+\mathbf{F}_t = T \times \hat{\mathbf{d}}
 $$
 
-**Drag** always points **opposite** to the velocity, and grows with the square of the speed:
+Once the fuel has run out ($m_{fuel} = 0$), there is no thrust: $\mathbf{F}_t = (0,\ 0)$.
+
+**Drag** always points **opposite** to the direction of travel, and grows with the **square** of the speed:
 
 $$
-\mathbf{F}_d = -\,\tfrac{1}{2} \times \rho(y) \times C_d \times A \times \lvert\mathbf{v}\rvert \times \mathbf{v}
+\mathbf{F}_d = - \tfrac{1}{2} \times \rho(y) \times C_d \times A \times \lvert\mathbf{v}\rvert^2 \times \hat{\mathbf{v}}
 $$
 
-It can help to read this as a size times a direction. The size of the drag force is $\tfrac{1}{2} \times \rho(y) \times C_d \times A \times \lvert\mathbf{v}\rvert^2$. The direction is $-\,\mathbf{v} \div \lvert\mathbf{v}\rvert$, a unit vector pointing backwards along the flight path.
+Read it as a size times a direction:
+- **Size:** $\tfrac{1}{2} \times \rho(y) \times C_d \times A \times \lvert\mathbf{v}\rvert^2$, a single number in newtons.
+- **Direction:** $-\,\hat{\mathbf{v}}$, the normalised velocity reversed so that it points backwards along the flight path.
+
+When the rocket is standing still, $\lvert\mathbf{v}\rvert = 0$, so the drag is zero. Note that $\hat{\mathbf{v}}$ has no direction in that case.
 
 **Air density** falls off exponentially with altitude:
 
@@ -126,20 +129,47 @@ $$
 
 #### One time step (Euler's method)
 
-Each call to `step(rocket, dt)` moves the rocket forward by $\Delta t$ seconds. The calculations are done **in this order**, and each line uses the values produced by the lines above it. The subscript "new" marks the value stored back into the rocket.
+Each call to `step(rocket, dt)` moves the rocket forward by $\Delta t$ seconds. Do the calculations **in this order**: each step uses the values produced by the steps above it. The subscript $new$ marks the value stored back into the rocket.
+
+**Step 1. Total force**
 
 $$
-\begin{aligned}
-&\text{1. Total force:} && \mathbf{F} = \mathbf{F}_g + \mathbf{F}_t + \mathbf{F}_d \\[4pt]
-&\text{2. Acceleration:} && \mathbf{a} = \mathbf{F} \div m \\[4pt]
-&\text{3. Velocity:} && \mathbf{v}_{new} = \mathbf{v} + \mathbf{a} \times \Delta t \\[4pt]
-&\text{4. Position:} && \mathbf{p}_{new} = \mathbf{p} + \mathbf{v}_{new} \times \Delta t \\[4pt]
-&\text{5. Fuel (only while the engine runs):} && m_{fuel,\,new} = \max\bigl(0,\; m_{fuel} - \dot{m} \times \Delta t\bigr) \\[4pt]
-&\text{6. Time:} && t_{new} = t + \Delta t
-\end{aligned}
+\mathbf{F} = \mathbf{F}_g + \mathbf{F}_t + \mathbf{F}_d
 $$
 
-Dividing a vector by a scalar, as in step 2, divides each component, which is the same as $\mathbf{F} \times (1 \div m)$. Step 4 uses the **new** velocity from step 3. The $\max(0,\;\ldots)$ in step 5 stops the fuel going negative on the last burning step.
+**Step 2. Acceleration**
+
+$$
+\mathbf{a} = \mathbf{F} \div m
+$$
+
+Dividing a vector by a scalar divides each component. This is the same as $\mathbf{F} \times (1 \div m)$.
+
+**Step 3. Velocity**
+
+$$
+\mathbf{v}_{new} = \mathbf{v} + \mathbf{a} \times \Delta t
+$$
+
+**Step 4. Position**, using the **new** velocity from step 3:
+
+$$
+\mathbf{p}_{new} = \mathbf{p} + \mathbf{v}_{new} \times \Delta t
+$$
+
+**Step 5. Fuel**, only while the engine is running:
+
+$$
+m_{fuel,new} = \max(0,\ m_{fuel} - \dot{m} \times \Delta t)
+$$
+
+The $\max(0,\ \ldots)$ stops the fuel going negative on the last burning step.
+
+**Step 6. Time**
+
+$$
+t_{new} = t + \Delta t
+$$
 
 #### The default rocket
 
