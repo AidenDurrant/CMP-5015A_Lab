@@ -40,7 +40,7 @@ if(ROCKETSIM_LIVE)
     set(SFML_BUILD_DOC OFF CACHE BOOL "" FORCE)
     FetchContent_Declare(SFML
         GIT_REPOSITORY https://github.com/SFML/SFML.git
-        GIT_TAG 3.0.0
+        GIT_TAG 3.0.2
         GIT_SHALLOW ON)
     FetchContent_MakeAvailable(SFML)
     target_link_libraries(rocketsim PRIVATE SFML::Graphics)
