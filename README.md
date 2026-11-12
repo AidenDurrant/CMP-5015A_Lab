@@ -2,7 +2,7 @@
 
 ## This week's worksheet
 
-**[Week 7 — Getting the Rocket to Fly!](rocketsim/docs/worksheets/week07.md)**
+**[Week 8 — Classes in depth](rocketsim/docs/worksheets/week08.md)**
 
 ---
 
@@ -21,6 +21,7 @@
 | Week | Worksheet | Theme |
 | --- | --- | --- |
 | 7 | [Getting the Rocket to Fly!](rocketsim/docs/worksheets/week07.md) | References, strings, streams, `new` / `delete` |
+| 8 | [Classes in depth](rocketsim/docs/worksheets/week08.md) | Constructors, RAII, the rule of three, operators, inheritance |
 
 ---
 
@@ -48,7 +49,8 @@ Each week's solution is released before the next lab. If you missed a week, copy
 | Week | Walkthrough | Code |
 | --- | --- | --- |
 | — | [How to use the solutions](rocketsim-solutions/README.md) | |
-| 7 | TBC | TBC |
+| 7 | [SOLUTION.md](rocketsim-solutions/week07/SOLUTION.md) | [src/](rocketsim-solutions/week07/src) |
+| 8 | TBC | TBC |
 
 ---
 
