@@ -475,23 +475,3 @@ Exact `==` on doubles is fine for values that were copied, but not for results o
 | Easy | Same numbers as Week 7 (with its gravity turn): apogee ≈ **6,475 m at 40.0 s**, range ≈ **2,890 m**. The telemetry is printed with `cout << rocket`, and `Rocket Starter-1 destroyed` appears **exactly once** in a plain run |
 | Medium | `Deep copies made so far: 1` with no crash and no sanitizer error. With `--compare`, two trajectories on one plot and two summaries, plus a line saying which engine flew higher |
 | Hard | `Live rockets at end: 0`. A `wind = -15` run lands short of the still-air range, and `wind = 15` lands long |
-
----
-
-## Common mistakes
-
-- **A getter returning `std::string` by value.** It copies the name every time telemetry is printed. Use `const std::string&`.
-- **Missing `virtual ~Engine()` / `virtual ~Force()`.** The code still compiles, but `delete` through a base pointer is undefined behaviour.
-- **`operator<<` returning `std::ostream` by value.** It does not compile, because streams cannot be copied, as you saw in Week 7.
-- **Copy assignment without the self-assignment check**, or freeing the old array before copying from `other`.
-- **Counting in only one constructor.** The copy constructor must count too, or `liveCount()` ends negative.
-- **Forgetting `override`.** A typo such as `burnrate` then quietly declares a new function instead of overriding.
-- **Not re-running `cmake -B build`** after adding `rocket.cpp`, `engine.cpp` and `force.cpp`, which gives "undefined reference" link errors.
-
----
-
-## Reflect — suggested answers
-
-1. **Invariants.** Fuel can never go negative (`update` clamps it). Position, velocity and time can only change together, in one Euler step, so nothing can move the rocket without advancing the clock. Dry mass, Cd, area and angle cannot change after construction. And `liveCount` is always accurate, because only the class's own constructors and destructor touch it.
-2. **`operator*(double, const Vec2&)` must be a free function** because a member operator always has the class object as its *left* operand. In `k * v` the left operand is a `double`, which has no members, so the only way to define it is as a free function.
-3. **`name()` as pure virtual vs a data member.** Pure virtual forces every concrete engine to provide a name (forgetting is a compile error), and stores nothing per object. A `name_` member set by each constructor works just as well and allows names chosen at run time. Neither design is wrong. The virtual version shows the kind of the class, while a data member describes an individual object.
