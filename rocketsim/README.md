@@ -42,7 +42,9 @@ That is correct: writing the physics is the week 7 task.
 To pass command-line options such as `--demo` or `--launch launch.txt`, and
 to set the working directory so `launch.txt` is found, see
 [Running with command-line arguments in CLion](docs/worksheets/week07.md#running-with-command-line-arguments-in-clion)
-in the week 7 worksheet.
+in the week 7 worksheet. For the week 9 fleet, put one `--launch` option per
+rocket in **Program arguments**, for example
+`--launch launch.txt --launch launch_b.txt`.
 
 To build without the live window in CLion, open **Settings → Build,
 Execution, Deployment → CMake** and add `-DROCKETSIM_LIVE=OFF` to
@@ -68,6 +70,15 @@ Then:
     ./build/rocketsim --quiet     # no per-second telemetry
     ./build/rocketsim --no-window # write flight.svg only, no window
     ./build/rocketsim --launch launch.txt   # week 7 hard task
+    ./build/rocketsim --out test  # week 7 hard task, writes test.svg and test.csv
+    ./build/rocketsim --launch launch.txt --launch launch_b.txt   # week 9 fleet
+
+The week 9 fleet takes one `--launch` option per rocket, flies them all on one
+plot and prints a ranking by apogee. `launch_b.txt` is a second launch file you
+write yourself. From week 9 a launch file can also describe a rocket with
+several stages, with one line per stage, bottom stage first:
+
+    stage = <dry> <fuel> <thrust> <burn>
 
 On Windows the executable is `build\Debug\rocketsim.exe`. In CLion, follow
 [Build and run in CLion](#build-and-run-in-clion) above instead.
@@ -85,16 +96,20 @@ opens in any browser.
 | --- | --- | --- |
 | `src/main.cpp` | given | Command line, builds a `Rocket`, runs `simulate`, saves the plot |
 | `src/vec2.h` | given | `Vec2` struct and free functions `add`, `scale`, `length`, ... |
-| `src/rocket.h` | given | `Rocket` struct: design parameters and flight state |
+| `src/rocket.h` | given | `Rocket` struct with the design parameters and flight state. It becomes a class in week 8 and gains a list of stages in week 9 |
+| `src/rocket.cpp` | **you create, week 8** | The member functions of the `Rocket` class |
 | `src/physics.h` | given | Declarations of the force functions and `step` |
-| `src/physics.cpp` | **TODO week 7** | The physics. Every function is a stub |
+| `src/physics.cpp` | **TODO week 7** | The physics. Every function starts as a stub. Week 9 feeds the wind profile into drag |
+| `src/engine.h/.cpp` | **you create, week 8 (medium)** | The `Engine` base class with a solid motor and a liquid engine |
+| `src/force.h/.cpp` | **you create, week 8 (hard)** | The `Force` base class with gravity, thrust and drag |
 | `src/simulation.h` | given | `FlightStats`, `SimSettings`, `simulate` |
-| `src/simulation.cpp` | partly given | The loop is written; telemetry and stats are TODO |
-| `src/config.h/.cpp` | **TODO week 7 (hard)** | Reads `launch.txt` |
+| `src/simulation.cpp` | partly given | The loop is written, telemetry and stats are TODO. Week 9 finds the stats with `<algorithm>` calls after the loop |
+| `src/telemetry.h/.cpp` | **you create, week 7 (hard)** | The telemetry log and the CSV writer. Week 9 replaces the log with a `std::vector<Sample>` |
+| `src/config.h/.cpp` | **TODO week 7 (hard)** | Reads `launch.txt`. Week 9 adds `stage =` lines |
 | `src/plot.h/.cpp` | given, complete | `Plot` class: SVG output and the ASCII preview |
 | `src/plot_window.cpp` | given, complete | The live window (SFML); `Plot::show()` |
 | `assets/` | given | Fonts for the window |
-| `launch.txt` | given | Example launch file |
+| `launch.txt` | given | Example launch file. Copy it to make more rockets for the week 9 fleet |
 
 Every `.cpp` file in `src/` is compiled automatically. When you add a new file,
 re-run `cmake -B build` once (in CLion: right-click `CMakeLists.txt` →
