@@ -1,4 +1,4 @@
-# Week 9 — Collections
+# Week 9 — Containers
 
 ### `vector`, `map`, `<algorithm>` and lambdas
 

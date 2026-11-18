@@ -2,7 +2,7 @@
 
 ## This week's worksheet
 
-**[Week 9: Collections](rocketsim/docs/worksheets/week09.md)**
+**[Week 9: Containers](rocketsim/docs/worksheets/week09.md)**
 
 ---
 
