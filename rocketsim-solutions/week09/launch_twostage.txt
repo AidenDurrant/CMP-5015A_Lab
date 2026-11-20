@@ -1,0 +1,10 @@
+# Two-stage version of Starter-1: same 150 kg of fuel split across two stages.
+name         = TwoStage
+payload_mass = 10
+#        dry  fuel  thrust  burn
+stage  = 25   100   5000    10
+stage  = 15   50    3000    6
+drag_coeff   = 0.5
+area         = 0.05
+launch_angle = 85
+parachute    = yes

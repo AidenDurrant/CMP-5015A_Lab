@@ -51,7 +51,8 @@ Each week's solution is released before the next lab. If you missed a week, copy
 | --- | --- | --- |
 | — | [How to use the solutions](rocketsim-solutions/README.md) | |
 | 7 | [SOLUTION.md](rocketsim-solutions/week07/SOLUTION.md) | [src/](rocketsim-solutions/week07/src) |
-| 8 | TBC | TBC |
+| 8 | [SOLUTION.md](rocketsim-solutions/week08/SOLUTION.md) | [src/](rocketsim-solutions/week08/src) |
+| 9 | [SOLUTION.md](rocketsim-solutions/week09/SOLUTION.md) | [src/](rocketsim-solutions/week09/src) |
 
 ---
 
