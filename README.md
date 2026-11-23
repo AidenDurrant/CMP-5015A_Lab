@@ -2,7 +2,7 @@
 
 ## This week's worksheet
 
-**[Week 9: Containers](rocketsim/docs/worksheets/week09.md)**
+**[Week 10: Templates and lambdas](rocketsim/docs/worksheets/week10.md)**
 
 ---
 
@@ -23,6 +23,7 @@
 | 7 | [Getting the Rocket to Fly!](rocketsim/docs/worksheets/week07.md) | References, strings, streams, `new` / `delete` |
 | 8 | [Classes in depth](rocketsim/docs/worksheets/week08.md) | Constructors, RAII, the rule of three, operators, inheritance |
 | 9 | [Collections](rocketsim/docs/worksheets/week09.md) | `vector`, `map`, `<algorithm>` and lambdas |
+| 10 | [Templates and lambdas](rocketsim/docs/worksheets/week10.md) | Function templates, class templates, `static_assert`, lambdas and captures |
 
 ---
 

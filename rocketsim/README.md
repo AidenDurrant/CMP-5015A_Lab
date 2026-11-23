@@ -44,7 +44,8 @@ to set the working directory so `launch.txt` is found, see
 [Running with command-line arguments in CLion](docs/worksheets/week07.md#running-with-command-line-arguments-in-clion)
 in the week 7 worksheet. For the week 9 fleet, put one `--launch` option per
 rocket in **Program arguments**, for example
-`--launch launch.txt --launch launch_b.txt`.
+`--launch launch.txt --launch launch_b.txt`. For week 10, use
+`--launch launch.txt --launch launch_twostage.txt --events`.
 
 To build without the live window in CLion, open **Settings → Build,
 Execution, Deployment → CMake** and add `-DROCKETSIM_LIVE=OFF` to
@@ -72,6 +73,7 @@ Then:
     ./build/rocketsim --launch launch.txt   # week 7 hard task
     ./build/rocketsim --out test  # week 7 hard task, writes test.svg and test.csv
     ./build/rocketsim --launch launch.txt --launch launch_b.txt   # week 9 fleet
+    ./build/rocketsim --launch launch.txt --launch launch_twostage.txt --events   # week 10
 
 The week 9 fleet takes one `--launch` option per rocket, flies them all on one
 plot and prints a ranking by apogee. `launch_b.txt` is a second launch file you
@@ -79,6 +81,19 @@ write yourself. From week 9 a launch file can also describe a rocket with
 several stages, with one line per stage, bottom stage first:
 
     stage = <dry> <fuel> <thrust> <burn>
+
+`--events` (week 9 hard) adds a 50 % throttle event at 20 s and a fairing
+jettison at 30 s to every rocket. From week 10 (hard) a launch file can choose
+its engine with one more line, and a file without it gets a solid motor:
+
+    engine = solid
+    engine = liquid
+
+The week 10 run above flies two rockets, so it prints the atmosphere
+`use_count()` before and after the fleet is built, each rocket's engine as it
+launches, a black box line at each touchdown, the ranking, and the mission
+control counts. `launch_twostage.txt` is your two stage launch file from week
+9, with `engine = liquid` added.
 
 On Windows the executable is `build\Debug\rocketsim.exe`. In CLion, follow
 [Build and run in CLion](#build-and-run-in-clion) above instead.
@@ -98,14 +113,19 @@ opens in any browser.
 | `src/vec2.h` | given | `Vec2` struct and free functions `add`, `scale`, `length`, ... |
 | `src/rocket.h` | given | `Rocket` struct with the design parameters and flight state. It becomes a class in week 8 and gains a list of stages in week 9 |
 | `src/rocket.cpp` | **you create, week 8** | The member functions of the `Rocket` class |
-| `src/physics.h` | given | Declarations of the force functions and `step` |
-| `src/physics.cpp` | **TODO week 7** | The physics. Every function starts as a stub. Week 9 feeds the wind profile into drag |
-| `src/engine.h/.cpp` | **you create, week 8 (medium)** | The `Engine` base class with a solid motor and a liquid engine |
+| `src/physics.h` | given | Declarations of the force functions and `step`. Deleted in week 10, replaced by `atmosphere.h` |
+| `src/physics.cpp` | **TODO week 7** | The physics. Every function starts as a stub. Week 9 feeds the wind profile into drag. Deleted in week 10 |
+| `src/wind.h` | **you create, week 9 (medium)** | The wind profile and `windAt`. Deleted in week 10, replaced by `atmosphere.h` |
+| `src/util.h` | **you create, week 10** | The function templates `clamp` and `lerp` |
+| `src/history.h` | **you create, week 10 (medium)** | The `History<T, N>` black box class template |
+| `src/atmosphere.h/.cpp` | **you create, week 10 (medium)** | The `Atmosphere` class, with air density, the wind profile and the physical constants |
+| `src/mission_control.h` | **you create, week 10 (hard)** | `MissionControl`, which counts the rockets still alive |
+| `src/engine.h/.cpp` | **you create, week 8 (medium)** | The `Engine` base class with a solid motor and a liquid engine. Week 10 adds the `makeEngine` factory |
 | `src/force.h/.cpp` | **you create, week 8 (hard)** | The `Force` base class with gravity, thrust and drag |
 | `src/simulation.h` | given | `FlightStats`, `SimSettings`, `simulate` |
 | `src/simulation.cpp` | partly given | The loop is written, telemetry and stats are TODO. Week 9 finds the stats with `<algorithm>` calls after the loop |
 | `src/telemetry.h/.cpp` | **you create, week 7 (hard)** | The telemetry log and the CSV writer. Week 9 replaces the log with a `std::vector<Sample>` |
-| `src/config.h/.cpp` | **TODO week 7 (hard)** | Reads `launch.txt`. Week 9 adds `stage =` lines |
+| `src/config.h/.cpp` | **TODO week 7 (hard)** | Reads `launch.txt`. Week 9 adds `stage =` lines, week 10 adds the `engine =` line |
 | `src/plot.h/.cpp` | given, complete | `Plot` class: SVG output and the ASCII preview |
 | `src/plot_window.cpp` | given, complete | The live window (SFML); `Plot::show()` |
 | `assets/` | given | Fonts for the window |
